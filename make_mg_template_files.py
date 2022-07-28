@@ -13,13 +13,13 @@ class Mg_Shapes:
 		width -- [nm] z-dir, width of rod
 		thick -- [nm] x-dir, thickness of rod
         """
+        self.CRSid = CRSid
 		self.lat_space = lat_space
 		self.length = length # in nm
 		self.kind = kind
 		self.new_dir_spec = new_dir_spec
 		self.new_dir_temp = new_dir_temp
 		self.shell = shell
-
 
 	def rewrite_shapefile(self, shape_old):
 		''' This function writes the N rods to a shape file '''
@@ -31,10 +31,13 @@ class Mg_Shapes:
 		    x_new = z_old
 		    y_new = x_old
 		    z_new = y_old
-		if self.kind != 'hex':
+		elif self.kind == 'kite' or self.kind == 'taco' or self.kind == 'tent' or self.kind == 'chair':
 		    x_new = x_old
 		    y_new = y_old
 		    z_new = z_old
+		else:
+			print("Definition of variable 'kind' is incorrect. It must either be 'hex', 'kite', 'taco', 'tent', or 'chair'.")
+			raise SystemExit
 		N = len(x_new)
 		file = open(str(self.new_dir_spec)+str('/shape.dat'),'w')
 		if self.shell == False:
@@ -54,7 +57,7 @@ class Mg_Shapes:
 		file.close()
 
 
-	def write_ddscatpar(self):
+	def write_ddscatpar(self, which_cluster):
 		data = np.loadtxt(str(self.new_dir_spec)+str('/shape.dat'),skiprows=7)
 		xlen = max(data[:,1]) + np.abs(min(data[:,1]))
 		ylen = max(data[:,2]) + np.abs(min(data[:,2]))
@@ -75,13 +78,17 @@ class Mg_Shapes:
 		file.write(str(" '**** Target Geometry and Composition ****'") + '\n')
 		file.write(str(" 'FROM_FILE' = CSHAPE*9 shape directive") + '\n')
 		file.write(str(" no SHPAR parameters needed") + '\n')
+		if which_cluster == 'hpc':
+			diel_path = str('/home/')+str(self.CRSid)+str('/rds/hpc-work/diels/')
+		if which_cluster == 'esc':
+			diel_path = str('/home/')+str(self.CRSid)+str('/diels/')			
 		if self.shell == False:
 			file.write(str(" 1         = NCOMP = number of dielectric materials") + '\n')
-			file.write(str(" '/home/caw97/rds/hpc-work/diels/Mg_Palik.txt' = file with refractive index 1") + '\n')
+			file.write(str(" '")+str(diel_path)+str("'Mg_Palik.txt' = file with refractive index 1") + '\n')
 		if self.shell == True:
 			file.write(str(" 2         = NCOMP = number of dielectric materials") + '\n')
-			file.write(str(" '/home/caw97/rds/hpc-work/diels/Mg_Palik.txt' = file with refractive index 1") + '\n')
-			file.write(str(" '/home/caw97/rds/hpc-work/diels/MgO.txt' = file with refractive index 1") + '\n')
+			file.write(str(" '")+str(diel_path)+str("'Mg_Palik.txt' = file with refractive index 1") + '\n')
+			file.write(str(" '")+str(diel_path)+str("'MgO.txt' = file with refractive index 1") + '\n')
 		file.write(str(" '**** Additional Nearfield calculation? ****'") + '\n')
 		file.write(str(" 0 = NRFLD (=0 to skip nearfield calc., =1 to calculate nearfield E, =2 to calculate nearfield E and B)") + '\n')
 		file.write(str(" 0.0 0.0 0.0 0.0 0.0 0.0 (fract. extens. of calc. vol. in -x,+x,-y,+y,-z,+z) ") + '\n')
@@ -180,11 +187,11 @@ class Mg_Shapes:
 		lines[22] = '\n'
 		lines[23] = '\n'
 		lines[24:35] = str('')
-		lines[20] = str('/home/caw97/codes/g-dda/ddscat') + '\n'
+		lines[20] = str('/home/')+str(self.CRSid)+str('/codes/g-dda/ddscat') + '\n'
 		lines[21] = str('wait') + '\n'
 		lines[22] = str('mv tdda_input_w000_ddscat.par tdda_input') + '\n'
 		lines[23] = str('wait') + '\n'
-		lines[24] = str('/home/caw97/codes/t-dda/source_code/Lattice_Diffusion /home/caw97/codes/t-dda/lattice_greenfunction/Green_grid300.txt var.par tdda_input temp.out') + '\n'
+		lines[24] = str('/home/')+str(self.CRSid)+str('/codes/t-dda/source_code/Lattice_Diffusion /home/')+str(self.CRSid)+str('/codes/t-dda/lattice_greenfunction/Green_grid300.txt var.par tdda_input temp.out') + '\n'
 		lines[25] = '\n'
 		lines[26] = '\n'
 		new_launch = open(str(self.new_dir_temp)+str('/launch.slurm'), 'w')
