@@ -31,19 +31,19 @@
 ## Stage B: Check Dimensions of Shape File
 Before moving forward, you'll need to double check that the shape you created is the one you wanted.
 
-1. Open the Jupyter Notebook file, `Plot CC Shapes with Shell` (or `Plot CC Shapes` if you did not use a shell).
+1. Open the Jupyter Notebook file, `Plot CC Shapes`. Note that this notebook is only for `Crystal Type: Hexagonal`.
 
-2. Use the first cell for your single crystal hexagonal platelets, and the second cell for the twinned structures. Note that this and the following scripts are only optimized for the `Crystal Type: Hexagonal`.
+2. Make sure the second cell contains the information describing the shape file you need to plot.
+*`main_folder` should remain `demo` for this tutorial.
+*`filename` should be the name you input in the last step of Crystal Creator.
+*`kind` must be the keyword associated with the five shapes ('hex', 'kite', 'chair', 'tent', or 'taco').
+*`lat_space` is the value you defined in Crystal Creator in the step `Define interdipole spacing`.
 
-3. Make sure the first line in each cell directs to where you've saved your shape file.
+3. You should now be able to run the code. It should produce a cross-sectional view of the shape and print the shape's thickness, length, and width. I've also differentiated these values according to display the metal's dimensions, and the shell dimensions (if you have a shell).
 
-4. Make sure the second line in each cell is the dipole spacing you specified with `Define interdipole distance`.
+4. For the twinned structures, calculating these values is slightly more complicated. Before recording the printed values, make sure the magenta dots are on the same side, i.e., measuring the thickness accurately. Depending on the shape you've created, sometime the pink dots may appear on opposite, diagonal sides and the printed values will not be correct. This is a quick fix if this happens, follow up and I can answer questions.
 
-5. You should now be able to run the code. It should produce a cross-sectional view of the shape and print the shape's thickness, length, and width. I've also differentiated these values according to display the metal's dimensions, and the shell dimensions.
-
-6. For the twinned structures, calculating these values is slightly more complicated. Before recording the printed values, make sure the magenta dots are on the same side, i.e., measuring the thickness accurately. Depending on the shape you've created, sometime the pink dots may appear on opposite, diagonal sides and the printed values will not be correct. This is a quick fix if this happens, follow up and I can answer questions.
-
-7. Now, make sure the dimensions are what you wanted them to be. If not, you'll need to remake the shape in Crystal Creator and perhaps adjust the distance you selected between the points. If the dimensions are all correct, record them in your data file and proceed to the next stage.
+5. Now, make sure the dimensions are what you wanted them to be. If not, you'll need to remake the shape in Crystal Creator and adjust the distance you selected between the points. If the dimensions are all correct, record them in your data file and proceed to the next stage.
 
 
 
