@@ -5,9 +5,9 @@ from shutil import copyfile
 #######################################################################################
 
 intermsof = 'um' # Either 'eV' or 'um' (pick which unit the name of folders to be in.)
-start = 0.700 	 # Starting wavelength or energy of spectrum 
-finish = 1.300	 # Highest wavelength or energy of spectrum (must be > start)
-num = 101      	 # Number of wavelengths / energy points in spectrum
+start = 0.400 	 # Starting wavelength or energy of spectrum 
+finish = 1.100	 # Highest wavelength or energy of spectrum (must be > start)
+num = 101     	 # Number of wavelengths / energy points in spectrum
 howmany = 25	 # How many wavelenghts / energy points per job 
 
 #######################################################################################
@@ -23,7 +23,7 @@ def make_directories(intermsof, start, finish, num):
 			lines = new_ddscatpar.readlines()
 			new_wavelength = np.round(1.240/i,4)	
 			new_string = str(' ') + str("%.4f" % new_wavelength) + str(' ') + str("%.4f" % new_wavelength) + str(" 1 'INV' = wavelengths (first,last,how many,how=LIN,INV,LOG)" + '\n')
-			lines[26] = new_string
+			lines[27] = new_string
 			new_ddscatpar = open(str(name)+str('/ddscat.par'), "w")
 			new_ddscatpar.writelines(lines)
 			new_ddscatpar.close()
@@ -39,7 +39,7 @@ def make_directories(intermsof, start, finish, num):
 			lines = new_ddscatpar.readlines()
 			new_wavelength = np.round(i,4)	
 			new_string = str(' ') + str("%.4f" % new_wavelength) + str(' ') + str("%.4f" % new_wavelength) + str(" 1 'INV' = wavelengths (first,last,how many,how=LIN,INV,LOG)" + '\n')
-			lines[26] = new_string
+			lines[27] = new_string
 			new_ddscatpar = open(str(name)+str('/ddscat.par'), "w")
 			new_ddscatpar.writelines(lines)
 			new_ddscatpar.close()
@@ -84,13 +84,15 @@ def make_submissionscripts(intermsof, start, finish, num, howmany):
 	if intermsof == 'um':
 		file.write(str('for i in *um ;do') + '\n')
 	file.write('\t' + str('cd $i; cp qtable temp') + '\n')
-	file.write('\t' + str('sed -i -e "1,14d" temp') + '\n')
+	file.write('\t' + str('sed -i -e "1,15d" temp') + '\n')
 	file.write('\t' + str('cat temp >>../Spectrum') + '\n')
 	file.write('\t' + str('rm temp') + '\n')
 	file.write('\t' + str('rm shape.dat') + '\n')
 	file.write('\t' + str('rm w000r000.avg') + '\n')
+	file.write('\t' + str('rm Einc_w000_ddscat.par') + '\n')
 	file.write('\t' + str('cd ../') + '\n')
 	file.write(str('done') + '\n')
 
 make_directories(intermsof=intermsof, start=start, finish=finish, num=num)
 make_submissionscripts(intermsof=intermsof, start=start, finish=finish, num=num,howmany=howmany)
+

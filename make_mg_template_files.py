@@ -4,7 +4,7 @@ import argparse
 import sys
 
 class Mg_Shapes:
-	def __init__(self, lat_space, length, kind, new_dir_spec, new_dir_temp, shell):
+	def __init__(self, CRSid, lat_space, length, kind, new_dir_spec, new_dir_temp, shell):
 		"""Defines the different system parameters.
         
         Keyword arguments:
@@ -13,7 +13,7 @@ class Mg_Shapes:
 		width -- [nm] z-dir, width of rod
 		thick -- [nm] x-dir, thickness of rod
         """
-        self.CRSid = CRSid
+		self.CRSid = CRSid
 		self.lat_space = lat_space
 		self.length = length # in nm
 		self.kind = kind
@@ -84,11 +84,11 @@ class Mg_Shapes:
 			diel_path = str('/home/')+str(self.CRSid)+str('/diels/')			
 		if self.shell == False:
 			file.write(str(" 1         = NCOMP = number of dielectric materials") + '\n')
-			file.write(str(" '")+str(diel_path)+str("'Mg_Palik.txt' = file with refractive index 1") + '\n')
+			file.write(str(" '")+str(diel_path)+str("Mg_Palik.txt' = file with refractive index 1") + '\n')
 		if self.shell == True:
 			file.write(str(" 2         = NCOMP = number of dielectric materials") + '\n')
-			file.write(str(" '")+str(diel_path)+str("'Mg_Palik.txt' = file with refractive index 1") + '\n')
-			file.write(str(" '")+str(diel_path)+str("'MgO.txt' = file with refractive index 1") + '\n')
+			file.write(str(" '")+str(diel_path)+str("Mg_Palik.txt' = file with refractive index 1") + '\n')
+			file.write(str(" '")+str(diel_path)+str("MgO.txt' = file with refractive index 1") + '\n')
 		file.write(str(" '**** Additional Nearfield calculation? ****'") + '\n')
 		file.write(str(" 0 = NRFLD (=0 to skip nearfield calc., =1 to calculate nearfield E, =2 to calculate nearfield E and B)") + '\n')
 		file.write(str(" 0.0 0.0 0.0 0.0 0.0 0.0 (fract. extens. of calc. vol. in -x,+x,-y,+y,-z,+z) ") + '\n')
@@ -129,7 +129,7 @@ class Mg_Shapes:
 		file.write(str(" 0 = NPLANES = number of scattering planes") + '\n')
 		file.close()	
 		
-	def rewrite_shapefile_poop_forT(self):
+	def rewrite_shapefile_forT(self):
 		data = np.loadtxt(str(self.new_dir_spec)+str('/shape.dat'),skiprows=7)
 		xnew = data[:,1] - max(data[:,1]) - 1
 		ynew = data[:,2]
@@ -156,7 +156,7 @@ class Mg_Shapes:
 		file.close()
 		return xnew, ynew, znew
 
-	def write_ddscatpar_forT(self, data_spec):
+	def write_ddscatpar_forT(self, data_spec, which_cluster):
 		data = np.loadtxt(str(data_spec))
 		data_spectra =  data[data[:,1].argsort(),]
 		waves = data_spectra[:,1]
@@ -170,6 +170,12 @@ class Mg_Shapes:
 		new_setting = str(' 2 = NRFLD (=0 to skip nearfield calc., =1 to calculate nearfield E, =2 to calculate nearfield E and B)') +'\n'
 		if self.shell == False: shift=0
 		if self.shell == True: shift=1
+		if which_cluster == 'hpc':
+			diel_path = str('/home/')+str(self.CRSid)+str('/rds/hpc-work/diels/')
+		if which_cluster == 'esc':
+			diel_path = str('/home/')+str(self.CRSid)+str('/diels/')			
+		lines[13] = str(" '")+str(diel_path)+str("Mg_Palik.txt' = file with refractive index 1") + '\n'
+		if self.shell == True: lines[14] = str(" '")+str(diel_path)+str("MgO.txt' = file with refractive index 2") + '\n'
 		lines[26+shift] = new_wave
 		lines[15+shift] = new_setting
 		new_ddscatpar = open(str(self.new_dir_temp)+str('/ddscat.par'), 'w')
@@ -177,26 +183,44 @@ class Mg_Shapes:
 		new_ddscatpar.close()
 		return peak_abs
 
-	def write_launchfile_forT(self):
-		new_launch = open(str(self.new_dir_temp)+str('/launch_temp.slurm'))
-		lines = new_launch.readlines()
-		lines[2] = str('#SBATCH -J ')+str(self.kind)+str('-temp') + '\n'
-		lines[19] = '\n'
-		lines[20] = '\n'
-		lines[21] = '\n'
-		lines[22] = '\n'
-		lines[23] = '\n'
-		lines[24:35] = str('')
-		lines[20] = str('/home/')+str(self.CRSid)+str('/codes/g-dda/ddscat') + '\n'
-		lines[21] = str('wait') + '\n'
-		lines[22] = str('mv tdda_input_w000_ddscat.par tdda_input') + '\n'
-		lines[23] = str('wait') + '\n'
-		lines[24] = str('/home/')+str(self.CRSid)+str('/codes/t-dda/source_code/Lattice_Diffusion /home/')+str(self.CRSid)+str('/codes/t-dda/lattice_greenfunction/Green_grid300.txt var.par tdda_input temp.out') + '\n'
-		lines[25] = '\n'
-		lines[26] = '\n'
-		new_launch = open(str(self.new_dir_temp)+str('/launch.slurm'), 'w')
-		new_launch.writelines(lines)
-		new_launch.close()
+	def write_launchfile_forT(self, which_cluster):
+		if which_cluster == 'hpc':
+			new_launch = open('template_files_spectra-shell-hpc/launch_temp.slurm')
+			lines = new_launch.readlines()
+			lines[2] = str('#SBATCH -J ')+str(self.kind)+str('-temp') + '\n'
+			lines[19] = '\n'
+			lines[20] = '\n'
+			lines[21] = '\n'
+			lines[22] = '\n'
+			lines[23] = '\n'
+			lines[24:35] = str('')
+			lines[20] = str('/home/')+str(self.CRSid)+str('/codes/g-dda/ddscat') + '\n'
+			lines[21] = str('wait') + '\n'
+			lines[22] = str('mv tdda_input_w000_ddscat.par tdda_input') + '\n'
+			lines[23] = str('wait') + '\n'
+			lines[24] = str('/home/')+str(self.CRSid)+str('/codes/t-dda/source_code/Lattice_Diffusion /home/')+str(self.CRSid)+str('/codes/t-dda/lattice_greenfunction/Green_grid300.txt var.par tdda_input temp.out') + '\n'
+			lines[25] = '\n'
+			lines[26] = '\n'
+			new_launch = open(str(self.new_dir_temp)+str('/launch.slurm'), 'w')
+			new_launch.writelines(lines)
+			new_launch.close()
+		if which_cluster == 'esc':
+			new_launch = open('template_files_spectra-shell-esc/launch_temp.slurm')
+			lines = new_launch.readlines()
+			lines[1] = str('#SBATCH -J ')+str(self.kind)+str('-temp') + '\n'
+			lines[6] = str('/home/')+str(self.CRSid)+str('/source_code/g-dda/source_code/ddscat') + '\n'
+			lines[7] = str('wait') + '\n'
+			lines[8] = str('mv tdda_input_w000_ddscat.par tdda_input') + '\n'
+			lines[9] = str('wait') + '\n'
+			lines[10] = str('/home/')+str(self.CRSid)+str('/source_code/t-dda/source_code/Lattice_Diffusion /home/')+str(self.CRSid)+str('/source_code/t-dda/lattice_greenfunction/Green_grid300.txt var.par tdda_input temp.out') + '\n'
+			lines[11:20] = str('')
+			new_launch = open(str(self.new_dir_temp)+str('/launch.slurm'), 'w')
+			new_launch.writelines(lines)
+			new_launch.close()
+
+
+
+
 
 
 	def write_varpar(self, peak_abs, xvals, yvals, zvals):
