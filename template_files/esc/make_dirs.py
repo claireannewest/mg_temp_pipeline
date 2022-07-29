@@ -9,8 +9,12 @@ start = 0.400 	 # Starting wavelength or energy of spectrum
 finish = 1.100	 # Highest wavelength or energy of spectrum (must be > start)
 num = 101     	 # Number of wavelengths / energy points in spectrum
 howmany = 25	 # How many wavelenghts / energy points per job 
+shell = True
 
 #######################################################################################
+
+if shell == True: offset = 1
+if shell == False: offset = 0
 
 def make_directories(intermsof, start, finish, num):
 	if intermsof == 'eV':
@@ -23,7 +27,7 @@ def make_directories(intermsof, start, finish, num):
 			lines = new_ddscatpar.readlines()
 			new_wavelength = np.round(1.240/i,4)	
 			new_string = str(' ') + str("%.4f" % new_wavelength) + str(' ') + str("%.4f" % new_wavelength) + str(" 1 'INV' = wavelengths (first,last,how many,how=LIN,INV,LOG)" + '\n')
-			lines[27] = new_string
+			lines[int(26+offset)] = new_string
 			new_ddscatpar = open(str(name)+str('/ddscat.par'), "w")
 			new_ddscatpar.writelines(lines)
 			new_ddscatpar.close()
@@ -39,7 +43,7 @@ def make_directories(intermsof, start, finish, num):
 			lines = new_ddscatpar.readlines()
 			new_wavelength = np.round(i,4)	
 			new_string = str(' ') + str("%.4f" % new_wavelength) + str(' ') + str("%.4f" % new_wavelength) + str(" 1 'INV' = wavelengths (first,last,how many,how=LIN,INV,LOG)" + '\n')
-			lines[27] = new_string
+			lines[int(26+offset)] = new_string
 			new_ddscatpar = open(str(name)+str('/ddscat.par'), "w")
 			new_ddscatpar.writelines(lines)
 			new_ddscatpar.close()
@@ -84,7 +88,7 @@ def make_submissionscripts(intermsof, start, finish, num, howmany):
 	if intermsof == 'um':
 		file.write(str('for i in *um ;do') + '\n')
 	file.write('\t' + str('cd $i; cp qtable temp') + '\n')
-	file.write('\t' + str('sed -i -e "1,15d" temp') + '\n')
+	file.write('\t' + str('sed -i -e "1,')+str(int(14+offset))+str('d" temp') + '\n')
 	file.write('\t' + str('cat temp >>../Spectrum') + '\n')
 	file.write('\t' + str('rm temp') + '\n')
 	file.write('\t' + str('rm shape.dat') + '\n')
